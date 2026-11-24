@@ -1,0 +1,221 @@
+openapi: 3.0.3
+info:
+  title: URL Shortener API
+  version: 1.0.0
+  description: API for creating and managing short links
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /health:
+    get:
+      summary: Check server and database
+      operationId: checkHealth
+      responses:
+        '200':
+          description: Database connected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          description: Database disconnected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+  /api/links:
+    post:
+      summary: Create short link
+      operationId: createLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLink'
+      responses:
+        '201':
+          description: Link created
+          headers:
+            Location:
+              description: URL of the created API resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    get:
+      summary: List all links
+      operationId: listLinks
+      responses:
+        '200':
+          description: List of links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Link'
+
+  /api/links/{code}:
+    parameters:
+      - $ref: '#/components/parameters/Code'
+    get:
+      summary: Get one link
+      operationId: getLink
+      responses:
+        '200':
+          description: Link found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update original URL
+      operationId: updateLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLink'
+      responses:
+        '200':
+          description: Link updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete short link
+      operationId: deleteLink
+      responses:
+        '204':
+          description: Link deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /r/{code}:
+    parameters:
+      - $ref: '#/components/parameters/Code'
+    get:
+      summary: Redirect to original URL
+      operationId: redirectLink
+      responses:
+        '302':
+          description: Temporary redirect
+          headers:
+            Location:
+              description: Original URL
+              required: true
+              schema:
+                type: string
+                format: uri
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    Code:
+      name: code
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9]{4,32}$'
+
+  schemas:
+    CreateLink:
+      type: object
+      required: [originalUrl]
+      additionalProperties: false
+      properties:
+        originalUrl:
+          type: string
+          format: uri
+          example: https://example.com/long-page
+        alias:
+          type: string
+          pattern: '^[A-Za-z0-9]{4,32}$'
+          example: mylink
+
+    UpdateLink:
+      type: object
+      required: [originalUrl]
+      additionalProperties: false
+      properties:
+        originalUrl:
+          type: string
+          format: uri
+          example: https://example.org/new-page
+
+    Link:
+      type: object
+      required: [code, originalUrl, shortUrl, clicks, createdAt]
+      properties:
+        code:
+          type: string
+        originalUrl:
+          type: string
+          format: uri
+        shortUrl:
+          type: string
+          format: uri
+        clicks:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    Health:
+      type: object
+      required: [status, database]
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        database:
+          type: string
+          enum: [connected, disconnected]
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Alias already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Link not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
