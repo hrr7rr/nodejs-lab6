@@ -149,3 +149,36 @@ app.get('/api/links/:code', async (req, res) => {
 
   res.json(formatLink(row));
 });
+
+//Оновлення оригінального посилання
+app.patch('/api/links/:code', async (req, res) => {
+  if (!validBody(req.body)) {
+    return error(res, 400, 'Invalid URL');
+  }
+
+  const row = await db.oneOrNone(
+    `UPDATE links
+     SET original_url = $1
+     WHERE code = $2
+     RETURNING *`,
+    [req.body.originalUrl, req.params.code]
+  );
+
+  if (!row) return error(res, 404, 'Link not found');
+
+  res.json(formatLink(row));
+});
+
+//Видалення посилання
+app.delete('/api/links/:code', async (req, res) => {
+  const result = await db.result(
+    'DELETE FROM links WHERE code = $1',
+    [req.params.code]
+  );
+
+  if (result.rowCount === 0) {
+    return error(res, 404, 'Link not found');
+  }
+
+  res.status(204).send();
+});
