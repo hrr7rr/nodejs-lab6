@@ -182,3 +182,31 @@ app.delete('/api/links/:code', async (req, res) => {
 
   res.status(204).send();
 });
+
+//Перенаправлення та підрахунок кліків
+app.get('/r/:code', async (req, res) => {
+  const row = await db.oneOrNone(
+    `UPDATE links
+     SET clicks = clicks + 1
+     WHERE code = $1
+     RETURNING original_url`,
+    [req.params.code]
+  );
+
+  if (!row) return error(res, 404, 'Link not found');
+
+  res.set('Cache-Control', 'no-store');
+  res.redirect(302, row.original_url);
+});
+
+//Помилки сервера
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({
+    error: 'Internal server error'
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
