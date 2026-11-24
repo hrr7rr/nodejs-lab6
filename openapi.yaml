@@ -52,6 +52,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '409':
           $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     get:
       summary: List all links
       operationId: listLinks
@@ -64,6 +66,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Link'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/links/{code}:
     parameters:
@@ -80,6 +84,8 @@ paths:
                 $ref: '#/components/schemas/Link'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     patch:
       summary: Update original URL
       operationId: updateLink
@@ -100,6 +106,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       summary: Delete short link
       operationId: deleteLink
@@ -108,6 +116,8 @@ paths:
           description: Link deleted
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /r/{code}:
     parameters:
@@ -127,6 +137,8 @@ paths:
                 format: uri
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   parameters:
@@ -218,4 +230,9 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
