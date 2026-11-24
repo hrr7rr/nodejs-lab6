@@ -1,0 +1,173 @@
+# 1. Health check - 200 OK
+curl -X 'GET' \
+  'http://localhost:8080/health' \
+  -H 'accept: */*'
+
+# docker compose stop db
+
+# 2. Health check - 503 Service Unavailable
+curl -X 'GET' \
+  'http://localhost:8080/health' \
+  -H 'accept: */*'
+
+# docker compose start db
+
+# 3. Create link - 201 Created
+curl -X 'POST' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "https://example.com/long-page",
+  "alias": "mylink"
+}'
+
+# 4. Invalid URL - 400 Bad Request
+curl -X 'POST' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "hello",
+  "alias": "testlink"
+}'
+
+# 5. Invalid alias - 400 Bad Request
+curl -X 'POST' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "https://example.com/long-page",
+  "alias": "te!"
+}'
+
+# 6. Duplicate alias - 409 Conflict
+curl -X 'POST' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "https://example.com/long-page",
+  "alias": "mylink"
+}'
+
+# 7. Automatic code - 201 Created
+curl -X 'POST' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "https://example.com/long-page"
+}'
+
+# 8. List links - 200 OK
+curl -X 'GET' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*'
+
+# 9. Get link - 200 OK
+curl -X 'GET' \
+  'http://localhost:8080/api/links/mylink' \
+  -H 'accept: */*'
+
+# 10. Get missing link - 404 Not Found
+curl -X 'GET' \
+  'http://localhost:8080/api/links/notfound123' \
+  -H 'accept: */*'
+
+# 11. Update link - 200 OK
+curl -X 'PATCH' \
+  'http://localhost:8080/api/links/mylink' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "https://example.org/new-page"
+}'
+
+# 12. Invalid update URL - 400 Bad Request
+curl -X 'PATCH' \
+  'http://localhost:8080/api/links/mylink' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "hello"
+}'
+
+# 13. Update missing link - 404 Not Found
+curl -X 'PATCH' \
+  'http://localhost:8080/api/links/norrrr' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "https://example.org/new-page"
+}'
+
+# 14. Redirect - 302 Found (Swagger UI: Failed to fetch)
+curl -X 'GET' \
+  'http://localhost:8080/r/mylink' \
+  -H 'accept: */*'
+
+# Verify actual redirect status in terminal
+curl -i http://localhost:8080/r/mylink
+
+# Browser: http://localhost:8080/r/mylink
+
+# 15. Check click counter - 200 OK
+curl -X 'GET' \
+  'http://localhost:8080/api/links/mylink' \
+  -H 'accept: */*'
+
+# 16. Missing redirect - 404 Not Found
+curl -X 'GET' \
+  'http://localhost:8080/r/notfound123' \
+  -H 'accept: */*'
+
+# 17. Delete link - 204 No Content
+curl -X 'DELETE' \
+  'http://localhost:8080/api/links/mylink' \
+  -H 'accept: */*'
+
+# 18. Delete missing link - 404 Not Found
+curl -X 'DELETE' \
+  'http://localhost:8080/api/links/mylink' \
+  -H 'accept: */*'
+
+# 19. Create Google link - 201 Created
+curl -X 'POST' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "https://www.google.com",
+  "alias": "google"
+}'
+
+# 20. Create Wikipedia link - 201 Created
+curl -X 'POST' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "originalUrl": "https://www.wikipedia.org",
+  "alias": "wiki"
+}'
+
+# Open in browser several times:
+# http://localhost:8080/r/google
+# http://localhost:8080/r/wiki
+
+# 21. List links before restart - 200 OK
+curl -X 'GET' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*'
+
+# docker compose down
+# docker compose ps
+# docker compose up -d
+# docker compose ps
+
+# 22. List links after restart - 200 OK
+curl -X 'GET' \
+  'http://localhost:8080/api/links' \
+  -H 'accept: */*'
